@@ -1,0 +1,7 @@
+{:deps
+ {org.clojure/math.combinatorics {:mvn/version "0.1.6"}
+  net.mikera/core.matrix {:mvn/version "0.62.0"}}
+ :aliases
+ {:eastwood
+  {:main-opts ["-m" "eastwood.lint" {:source-paths ["src"]}]
+   :extra-deps {jonase/eastwood {:mvn/version "RELEASE"}}}}}
