@@ -11,8 +11,8 @@
 (defn count-increase [data]
   (->> data
        (partition 2 1)
-       (map #(if (apply < %) 1 0))
-       (reduce +)))
+       (filter #(apply < %))
+       count))
 
 (defn part1 []
   (count-increase input))
