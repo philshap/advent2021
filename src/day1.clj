@@ -4,9 +4,9 @@
 
 (def input
   (->> "src/day1-input.txt"
-      slurp
-      str/split-lines
-      (map edn/read-string)))
+       slurp
+       str/split-lines
+       (map edn/read-string)))
 
 (defn count-increase [data]
   (->> data
