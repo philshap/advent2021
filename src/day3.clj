@@ -1,19 +1,17 @@
 (ns day3
   (:require [clojure.string :as str]))
 
-(def input
-  (-> "src/day3-input.txt"
-      slurp
-      str/split-lines))
-
 (defn parse-line [line]
-  (->> line
-       vec
-       (map #(- (int %) (int \0)))))
+  (map #(- (int %) (int \0)) line))
+
+(def input
+  (->> "src/day3-input.txt"
+       slurp
+       str/split-lines
+       (map parse-line)))
 
 (defn part1 []
   (->> input
-       (map parse-line)
        (reduce (partial mapv +))
        (reduce (fn [result sum]
                  (+ (bit-shift-left result 1)
@@ -21,7 +19,7 @@
        (#(* % (bit-and (dec (bit-shift-left 1 (count (first input))))
                        (bit-not %))))))
 
-(defn rating-filter [f pos ratings]
+(defn filter-ratings [f pos ratings]
   (let [total (->> ratings
                    (map #(nth % pos))
                    flatten
@@ -32,25 +30,19 @@
                 (= (nth rating pos) 0)))
             ratings)))
 
-(defn o2-rating [pos ratings]
-  (rating-filter >= pos ratings))
-
-(defn co2-rating [pos ratings]
-  (rating-filter < pos ratings))
+(defn rating->value [rating]
+  (reduce (fn [result digit] (+ (bit-shift-left result 1) digit)) 0 rating))
 
 (defn find-rating [f]
   (loop [pos 0
-         ratings (map parse-line input)]
+         ratings input]
     (if (= 1 (count ratings))
-      (first ratings)
+      (rating->value (first ratings))
       (recur (inc pos)
-             (f pos ratings)))))
-
-(defn rating->value [v]
-  (reduce (fn [result digit] (+ (bit-shift-left result 1) digit)) 0 v))
+             (filter-ratings f pos ratings)))))
 
 (defn part2 []
-  (* (rating->value (find-rating o2-rating)) (rating->value (find-rating co2-rating))))
+  (* (find-rating >=) (find-rating <)))
 
 (comment
   (println "part 1: " (part1))
