@@ -10,6 +10,7 @@
 (defn range-either [v1 v2]
   (if (< v1 v2) (range v1 (inc v2)) (range v2 (inc v1))))
 
+; maybe rewrite to avoid conditionals
 (defn parse-line-1 [line]
   (let [[_ & points] (re-matches #"(\d+),(\d*) -> (\d+),(\d+)" line)
         [x1 y1 x2 y2] (map edn/read-string points)]
@@ -19,8 +20,8 @@
 
 (defn count-overlaps [segments]
   (->> segments
-       (reduce concat)
-       frequencies
+       (map frequencies)
+       (reduce (partial merge-with +))
        vals
        (remove #(= % 1))
        count))
@@ -30,6 +31,7 @@
        (map parse-line-1)
        count-overlaps))
 
+; must be a better way
 (defn parse-line-2 [line]
   (let [[_ & points] (re-matches #"(\d+),(\d*) -> (\d+),(\d+)" line)
         [x1 y1 x2 y2] (map edn/read-string points)
