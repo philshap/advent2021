@@ -7,46 +7,33 @@
       slurp
       str/split-lines))
 
-(defn range-either [v1 v2]
-  (if (< v1 v2) (range v1 (inc v2)) (range v2 (inc v1))))
+(defn parse-line [line]
+  (let [[x1 y1 _ x2 y2] (edn/read-string (format "[%s]" line))]
+    [[x1 y1] [x2 y2]]))
 
-; maybe rewrite to avoid conditionals
-(defn parse-line-1 [line]
-  (let [[_ & points] (re-matches #"(\d+),(\d*) -> (\d+),(\d+)" line)
-        [x1 y1 x2 y2] (map edn/read-string points)]
-    (cond
-      (= x1 x2) (map #(vector x1 %) (range-either y1 y2))
-      (= y1 y2) (map #(vector % y1) (range-either x1 x2)))))
+(defn diagonal? [[start end]]
+  (reduce #(and %1 %2) (mapv not= start end)))
 
-(defn count-overlaps [segments]
-  (->> segments
-       (map frequencies)
-       (reduce (partial merge-with +))
+(defn draw-line [[start end]]
+  (let [delta (mapv (comp #(Integer/signum %) -) end start)]
+    (->> (iterate (partial mapv + delta) start)
+         (take-while (partial not= (mapv + delta end))))))
+
+(defn count-intersections [maybe-filter]
+  (->> input
+       (map parse-line)
+       maybe-filter
+       (mapcat draw-line)
+       frequencies
        vals
-       (remove #(= % 1))
+       (remove (partial = 1))
        count))
 
 (defn part1 []
-  (->> input
-       (map parse-line-1)
-       count-overlaps))
-
-; must be a better way
-(defn parse-line-2 [line]
-  (let [[_ & points] (re-matches #"(\d+),(\d*) -> (\d+),(\d+)" line)
-        [x1 y1 x2 y2] (map edn/read-string points)
-        dx (Integer/signum (- x2 x1))
-        dy (Integer/signum (- y2 y1))]
-    (loop [pos [x1 y1]
-           points ()]
-      (if (= pos [x2 y2])
-        (conj points pos)
-        (recur (mapv + [dx dy] pos) (conj points pos))))))
+  (count-intersections (partial remove diagonal?)))
 
 (defn part2 []
-  (->> input
-       (map parse-line-2)
-       count-overlaps))
+  (count-intersections identity))
 
 (comment
   (println "part 1: " (part1))
