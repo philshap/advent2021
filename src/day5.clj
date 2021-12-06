@@ -12,7 +12,7 @@
     [[x1 y1] [x2 y2]]))
 
 (defn diagonal? [[start end]]
-  (reduce #(and %1 %2) (mapv not= start end)))
+  (every? true? (mapv not= start end)))
 
 (defn draw-line [[start end]]
   (let [delta (mapv (comp #(Integer/signum %) -) end start)]
