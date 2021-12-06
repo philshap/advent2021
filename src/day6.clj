@@ -20,7 +20,7 @@
          group9 {}
          generation 0]
     (if (= generation num-generations)
-      (+ (reduce + (vals group7)) (reduce + (vals group9)))
+      (reduce + (concat (vals group7) (vals group9)))
       (recur
         (merge-with + group7 (spawn group9 9 7 generation))
         (merge-with + group9 (spawn group7 7 9 generation))
