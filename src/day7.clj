@@ -16,16 +16,13 @@
 (defn find-crab-fuel [fuel-needed]
   (->> (range (reduce min input) (reduce max input))
        (map (partial total-needed input fuel-needed))
-       sort
-       first))
+       (reduce min)))
 
 (defn part1 []
   (find-crab-fuel identity))
 
-(defn fuel-needed [distance] (quot (* distance (inc distance)) 2))
-
 (defn part2 []
-  (find-crab-fuel fuel-needed))
+  (find-crab-fuel #(quot (* % (inc %)) 2)))
 
 (comment
   (println "part 1: " (part1))
