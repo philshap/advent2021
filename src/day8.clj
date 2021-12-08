@@ -56,7 +56,7 @@
        (map decode-line)
        (reduce +)))
 
-;(comment
+(comment
   (println "part 1: " (part1))
   (println "part 2: " (part2))
-  ;)
+  )
