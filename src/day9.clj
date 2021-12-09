@@ -24,9 +24,9 @@
   (every? (partial < (get-depth pos)) (neighbors pos)))
 
 (defn find-low-points []
-  (->> (for [x (range 0 (count input))
-             y (range 0 (count (first input)))]
-         [y x])
+  (->> (for [y (range 0 (count input))
+             x (range 0 (count (first input)))]
+         [x y])
        (filter low-point?)))
 
 (defn part1 []
