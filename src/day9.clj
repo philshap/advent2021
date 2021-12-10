@@ -43,11 +43,12 @@
   (set/union basin (set (mapcat basin-neighbors basin))))
 
 (defn basin-size [pos]
-  (loop [basin (fill-basin #{pos})]
-    (let [new-basin (fill-basin basin)]
-      (if (= new-basin basin)
-        (count basin)
-        (recur new-basin)))))
+  (->> #{pos}
+       (iterate fill-basin)
+       (partition 2 1)
+       (drop-while (partial apply not=))
+       ffirst
+       count))
 
 (defn part2 []
   (->> (find-low-points)
