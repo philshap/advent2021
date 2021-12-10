@@ -2,7 +2,7 @@
   (:require [clojure.string :as str]))
 
 (def input
-  (-> "src/input"
+  (-> "src/day10-input.txt"
       slurp
       str/split-lines))
 
