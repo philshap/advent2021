@@ -46,16 +46,17 @@
 (defn remove-flashed [flashed levels]
   (into {} (remove (fn [[k _]] (flashed k)) levels)))
 
-(defn next-cycle [[levels flash-count]]
+;; output is [new-levels, count of flashed in cycle]
+(defn next-cycle [[levels _]]
   (loop [new-levels (raise-energy levels)
          all-flashed #{}]
     (let [flashed (find-flash new-levels)
-          set-flashed (set flashed)]
+          flashed-set (set flashed)]
       (if (empty? flashed)
         [(merge new-levels (reduce merge (for [pos all-flashed] {pos 0})))
-         (+ flash-count (count all-flashed))]
-        (recur (raise-adjacent flashed (remove-flashed set-flashed new-levels))
-               (set/union all-flashed set-flashed))))))
+         (count all-flashed)]
+        (recur (raise-adjacent flashed (remove-flashed flashed-set new-levels))
+               (set/union all-flashed flashed-set))))))
 
 (defn flash-stream [levels]
   (->> [levels 0]
@@ -64,17 +65,14 @@
 
 (defn part1 []
   (->> (flash-stream (parse-input input))
-       (drop 100)
-       first))
+       (take (inc 100))
+       (reduce +)))
 
 (defn part2 []
   (let [levels (parse-input input)]
     (->> (flash-stream levels)
-         (partition 2 1)
-         (map (fn [[x1 x2]] (- x2 x1)))
          (take-while (partial not= (count levels)))
-         count
-         inc)))
+         count)))
 
 (comment
   (println "part 1: " (part1))
