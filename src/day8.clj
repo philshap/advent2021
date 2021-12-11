@@ -11,10 +11,26 @@
   (-> line (str/split #"\|")
       (->> (map str/trim) (map #(str/split % #" ")))))
 
+;;  aaa
+;; b   c
+;; b   c
+;;  ddd
+;; e   f
+;; e   f
+;;  ggg
+(def segments ["abcefg", "cf", "acdeg", "acdfg", "bcdf", "abdfg", "abdefg", "acf", "abcdefg", "abcdfg"])
+(def unique? (->> segments (map count) frequencies (filter #(= (second %) 1)) keys (into #{})))
+
 (defn part1 []
   (->> input
-       (map (comp #(+ (% 2 0) (% 4 0) (% 3 0) (% 7 0)) frequencies (partial map count) last parse-line))
-       (reduce +)))
+       (mapcat (comp (partial map count) last parse-line))
+       (filter unique?)
+       count))
+
+(defn segment-frequencies [digits] (frequencies (reduce concat digits)))
+(defn freq-total [digits]
+  (map #(reduce + (map segment-frequencies %)) digits))
+(def freq-total->number (zipmap (map freq-total segments) (range)))
 
 (defn decode [digit all-digits]
   (let [one (first (filter #(= (count %) 2) all-digits))
@@ -56,7 +72,7 @@
        (map decode-line)
        (reduce +)))
 
-(comment
+;(comment
   (println "part 1: " (part1))
   (println "part 2: " (part2))
-  )
+  ;)
