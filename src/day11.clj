@@ -46,7 +46,7 @@
 (defn remove-flashed [flashed levels]
   (into {} (remove (fn [[k _]] (flashed k)) levels)))
 
-;; output is [new-levels, count of flashed in cycle]
+;; output is [new-levels, count of 0s in new-levels]
 (defn next-cycle [[levels _]]
   (loop [new-levels (raise-energy levels)
          all-flashed #{}]

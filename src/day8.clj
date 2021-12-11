@@ -27,10 +27,10 @@
        (filter unique?)
        count))
 
-(defn segment-frequencies [digits] (frequencies (reduce concat digits)))
-(defn freq-total [digits]
-  (map #(reduce + (map segment-frequencies %)) digits))
-(def freq-total->number (zipmap (map freq-total segments) (range)))
+;(defn segment-frequencies [digits] (frequencies (reduce concat digits)))
+;(defn freq-total [digits]
+;  (map #(reduce + (map segment-frequencies %)) digits))
+;(def freq-total->number (zipmap (map freq-total segments) (range)))
 
 (defn decode [digit all-digits]
   (let [one (first (filter #(= (count %) 2) all-digits))
