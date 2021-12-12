@@ -16,29 +16,39 @@
 (defn build-adj [input]
   (->> input
        (map parse-edge)
-       (apply (partial merge-with concat))))
+       (reduce (partial merge-with concat))))
 
 (defn visit-once? [node] (= node (str/lower-case node)))
 
-(defn extend-path [adj path]
+(defn part1-filter [path node]
+  (and (visit-once? node) (some (partial = node) path)))
+
+(defn extend-path [node-filter adj path]
   (->> (adj (last path))
-       (remove #(and (visit-once? %) (some (partial = %) path)))
+       (remove (partial node-filter path))
        (map (partial conj path))))
 
 (defn complete? [path] (= "end" (last path)))
 
-(defn find-paths [adj]
-  (loop [paths [["start"]]]
-    (let [new-paths (mapcat (partial extend-path adj) paths)]
+;; could change to use `iterate` by filtering incomplete and then use
+;; (->> [["start"]]
+;;   (iterate (partial find-paths part1-filter (build-adj input))
+;;   (drop-while (partial (some? (complement complete?)))
+;;   first count)
+(defn find-paths [node-filter adj]
+  (loop [incomplete [["start"]]
+         complete []]
+    (let [new-paths (mapcat (partial extend-path node-filter adj) incomplete)]
       (if (empty? new-paths)
-        paths
-        (recur (concat (filter complete? paths) new-paths))))))
+        complete
+        (recur (remove complete? new-paths)
+               (concat (filter complete? new-paths) complete))))))
 
 (defn part1 []
-  (-> input
-      build-adj
-      find-paths
-      count))
+  (->> input
+       build-adj
+       (find-paths part1-filter)
+       count))
 
 (defn any-twice? [path]
   (->> (filter visit-once? path)
@@ -46,31 +56,24 @@
        vals
        (some (partial < 1))))
 
-(defn allow-twice [path node]
+;; move any-twice? into this method and use frequencies result for `found`
+(defn part2-filter [path node]
   (let [found (count (filter (partial = node) path))]
-    (if (visit-once? node)
-      (or (zero? found)
-          (and (= found 1)
-               (not (any-twice? (remove #(= node %) path)))))
-      true)))
-
-(defn extend-path-2 [adj path]
-  (->> (adj (last path))
-       (filter (partial allow-twice path))
-       (map (partial conj path))))
-
-(defn find-paths-2 [adj]
-  (loop [paths [["start"]]]
-    (let [new-paths (mapcat (partial extend-path-2 adj) paths)]
-      (if (empty? new-paths)
-        paths
-        (recur (concat (filter complete? paths) new-paths))))))
+    (and (visit-once? node)
+         (or (= found 2)
+             (and (= found 1)
+                  (any-twice? (remove #(= node %) path)))))))
 
 (defn part2 []
-  (-> input
-      build-adj
-      find-paths-2
-      count))
+  (->> input
+       build-adj
+       (find-paths part2-filter)
+       count))
+
+; (part1)
+;=> 5958
+;(part2)
+;=> 150426
 
 (comment
   (println "part 1: " (part1))
