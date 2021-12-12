@@ -30,13 +30,6 @@
     (filter complete? paths)
     (mapcat (partial extend-path node-filter adj) paths)))
 
-;; part 2
-
-(defn visit-once? [node] (= node (str/lower-case node)))
-
-(defn part1-filter [path node]
-  (and (visit-once? node) (some (partial = node) path)))
-
 (defn count-paths [node-filter adj]
   (->> [["start"]]
        (iterate (partial extend-paths node-filter adj))
@@ -44,24 +37,26 @@
        first
        count))
 
+;; part 1
+
+(defn visit-once? [node] (= node (str/lower-case node)))
+
+(defn part1-filter [path node]
+  (and (visit-once? node) (some (partial = node) path)))
+
 (defn part1 []
   (count-paths part1-filter (build-adj input)))
 
 ;; part 2
 
-(defn any-twice? [path]
-  (->> (filter visit-once? path)
-       frequencies
-       vals
-       (some (partial < 1))))
-
-;; move any-twice? into this method and use frequencies result for `found`
+;; Maybe could be memoized if written recursively?
 (defn part2-filter [path node]
-  (let [found (count (filter (partial = node) path))]
-    (and (visit-once? node)
+  (and (visit-once? node)
+       (let [fqs (frequencies (filter visit-once? path))
+             found (fqs node 0)]
          (or (= found 2)
              (and (= found 1)
-                  (any-twice? (remove #(= node %) path)))))))
+                  (some (partial < 1) (vals fqs)))))))
 
 (defn part2 []
   (count-paths part2-filter (build-adj input)))
