@@ -18,11 +18,6 @@
        (map parse-edge)
        (reduce (partial merge-with concat))))
 
-(defn visit-once? [node] (= node (str/lower-case node)))
-
-(defn part1-filter [path node]
-  (and (visit-once? node) (some (partial = node) path)))
-
 (defn extend-path [node-filter adj path]
   (->> (adj (last path))
        (remove (partial node-filter path))
@@ -33,7 +28,14 @@
 (defn extend-paths [node-filter adj paths]
   (concat
     (filter complete? paths)
-    (mapcat (partial extend-path node-filter adj) (remove complete? paths))))
+    (mapcat (partial extend-path node-filter adj) paths)))
+
+;; part 2
+
+(defn visit-once? [node] (= node (str/lower-case node)))
+
+(defn part1-filter [path node]
+  (and (visit-once? node) (some (partial = node) path)))
 
 (defn count-paths [node-filter adj]
   (->> [["start"]]
@@ -44,6 +46,8 @@
 
 (defn part1 []
   (count-paths part1-filter (build-adj input)))
+
+;; part 2
 
 (defn any-twice? [path]
   (->> (filter visit-once? path)
