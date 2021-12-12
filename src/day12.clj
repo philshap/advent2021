@@ -30,25 +30,20 @@
 
 (defn complete? [path] (= "end" (last path)))
 
-;; could change to use `iterate` by filtering incomplete and then use
-;; (->> [["start"]]
-;;   (iterate (partial find-paths part1-filter (build-adj input))
-;;   (drop-while (partial (some? (complement complete?)))
-;;   first count)
-(defn find-paths [node-filter adj]
-  (loop [incomplete [["start"]]
-         complete []]
-    (let [new-paths (mapcat (partial extend-path node-filter adj) incomplete)]
-      (if (empty? new-paths)
-        complete
-        (recur (remove complete? new-paths)
-               (concat (filter complete? new-paths) complete))))))
+(defn extend-paths [node-filter adj paths]
+  (concat
+    (filter complete? paths)
+    (mapcat (partial extend-path node-filter adj) (remove complete? paths))))
+
+(defn count-paths [node-filter adj]
+  (->> [["start"]]
+       (iterate (partial extend-paths node-filter adj))
+       (drop-while (partial some (complement complete?)))
+       first
+       count))
 
 (defn part1 []
-  (->> input
-       build-adj
-       (find-paths part1-filter)
-       count))
+  (count-paths part1-filter (build-adj input)))
 
 (defn any-twice? [path]
   (->> (filter visit-once? path)
@@ -65,10 +60,7 @@
                   (any-twice? (remove #(= node %) path)))))))
 
 (defn part2 []
-  (->> input
-       build-adj
-       (find-paths part2-filter)
-       count))
+  (count-paths part2-filter (build-adj input)))
 
 ; (part1)
 ;=> 5958
