@@ -32,8 +32,7 @@
 (defn find-flash [levels]
   (->> levels (filter (fn [[_ v]] (> v 9))) keys))
 
-(def adj (for [x (range -1 2)
-               y (range -1 2)
+(def adj (for [x [-1 0 1], y [-1 0 1]
                :when (not= 0 x y)]
            [x y]))
 
@@ -42,7 +41,7 @@
 
 (defn raise-adjacent [flashed levels]
   (reduce (fn [levels pos]
-            (if-let [old (levels pos nil)]
+            (if-some [old (levels pos)]
               (assoc levels pos (inc old))
               levels))
           levels (flash-adjacent flashed)))
