@@ -10,16 +10,18 @@
 (defn read-dots [raw-dots]
   (->> raw-dots
        str/split-lines
-       (map (comp edn/read-string (partial format "[%s]")))
-       (into #{})))
+       (map (comp edn/read-string (partial format "[%s]")))))
 
 (defn apply-fold [dots fold]
   (let [[inst raw-value] (str/split fold #"=")
         value (edn/read-string raw-value)
         flip #(- (* value 2) %)]
-    (if (= \x (last inst))
-      (into #{} (map #(if (< (first %) value) % [(flip (first %)) (second %)]) dots))
-      (into #{} (map #(if (< (second %) value) % [(first %) (flip (second %))]) dots)))))
+    (into #{} (map
+                (fn [[x y :as dot]]
+                  (if (= \x (last inst))
+                    (if (< x value) dot [(flip x) y])
+                    (if (< y value) dot [x (flip y)])))
+                dots))))
 
 (defn part1 []
   (let [dots (read-dots (first input))
@@ -27,12 +29,10 @@
     (count (apply-fold dots (first folds)))))
 
 (defn draw [dots]
-  (dorun
-    (let [max-x (reduce max (map first dots))]
-      (for [y (range (inc (reduce max (map second dots))))
-            x (range (inc max-x))]
-        (do (print (if (dots [x y]) "##" ".."))
-            (when (= x max-x) (println)))))))
+  (reduce str (for [y (range (inc (reduce max (map second dots))))
+                    x (range (inc (reduce max (map first dots))))]
+                (str (if (zero? x) "\n" "")
+                     (if (dots [x y]) "##" "..")))))
 
 (defn part2 []
   (let [dots (read-dots (first input))
