@@ -8,8 +8,12 @@
       (for [y (range 10)
             x (range 10)
             :let [level (levels [x y])]]
-        (do (print (if (nil? level) \. (if (> level 9) \X level)))
-            (when (= x 9) (println)))))))
+        (do (print
+              (cond (nil? level) \.
+                    (> level 9) \X
+                    :else level))
+            (when (= x 9) (println))))))
+  )
 
 (def input
   (-> "src/day11-input.txt"
@@ -46,31 +50,29 @@
 (defn remove-flashed [flashed levels]
   (into {} (remove (fn [[k _]] (flashed k)) levels)))
 
-;; output is [new-levels, count of flashed in cycle]
-(defn next-cycle [[levels _]]
+(defn next-cycle [levels]
   (loop [new-levels (raise-energy levels)
          all-flashed #{}]
     (let [flashed (find-flash new-levels)
           flashed-set (set flashed)]
       (if (empty? flashed)
-        [(merge new-levels (reduce merge (for [pos all-flashed] {pos 0})))
-         (count all-flashed)]
+        (merge new-levels (reduce merge (for [pos all-flashed] {pos 0})))
         (recur (raise-adjacent flashed (remove-flashed flashed-set new-levels))
                (set/union all-flashed flashed-set))))))
 
-(defn flash-stream [levels]
-  (->> [levels 0]
+(defn flash-octopuses [levels]
+  (->> levels
        (iterate next-cycle)
-       (map second)))
+       (map (comp count (partial filter zero?) vals))))
 
 (defn part1 []
-  (->> (flash-stream (parse-input input))
+  (->> (flash-octopuses (parse-input input))
        (take (inc 100))
        (reduce +)))
 
 (defn part2 []
   (let [levels (parse-input input)]
-    (->> (flash-stream levels)
+    (->> (flash-octopuses levels)
          (take-while (partial not= (count levels)))
          count)))
 
