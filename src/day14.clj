@@ -24,7 +24,7 @@
 
 (defn compute-score [polymer-map]
   (->> polymer-map
-       (map (fn [[poly total]] {(first poly) total}))
+       (map (fn [[[A _] total]] {A total}))
        (reduce (partial merge-with +))
        vals
        (#(- (reduce max %) (reduce min %)))))
