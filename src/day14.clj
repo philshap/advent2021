@@ -22,8 +22,8 @@
                  [insert B] total})))
        (reduce (partial merge-with +))))
 
-(defn compute-score [polymer-map]
-  (->> polymer-map
+(defn compute-score [polymer]
+  (->> polymer
        (map (fn [[[A _] total]] {A total}))
        (reduce (partial merge-with +))
        vals
