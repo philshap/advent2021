@@ -10,6 +10,7 @@
   (->> (second input)
        str/split-lines
        (map #(str/split % #" -> "))
+       (map (fn [[[A B] [C]]] [[A B] C]))
        (into {})))
 
 ;; a polymer is stored as a frequency map of element pairs to the count of the pair in the polymer
@@ -17,8 +18,8 @@
   (->> polymer
        (map (fn [[[A B :as pair] total]]
               (let [insert (rules pair)]
-                {(str A insert) total
-                 (str insert B) total})))
+                {[A insert] total
+                 [insert B] total})))
        (reduce (partial merge-with +))))
 
 (defn compute-score [polymer-map]
@@ -32,13 +33,12 @@
   (let [template (first input)
         rules (parse-rules input)]
     (->> (partition 2 1 template)
-         (map #(reduce str %))
          frequencies
          (iterate (partial apply-rules rules))
          (drop limit)
          first
          ; compute-score won't include the last element, so we add it here
-         (#(conj % {(str (last template)) 1}))
+         (#(conj % {[(last template)] 1}))
          compute-score)))
 
 (defn part1 []
