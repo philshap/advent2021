@@ -17,6 +17,7 @@
    (subs bits length)])
 
 ;; packet decoding
+
 (defn decode-literal [bits]
   (loop [[value bits] [0 bits]]
     (let [[flag bits] (read-bits bits 1)
@@ -62,7 +63,10 @@
      (reduce + (map version-total (:subs packet)))))
 
 (defn part1 []
-  (version-total (first (decode-packet (parse-input input)))))
+  (->> (parse-input input)
+       decode-packet
+       first
+       version-total))
 
 (defn eval-packet [packet]
   (let [args (map eval-packet (:subs packet))]
@@ -77,7 +81,10 @@
       7 (if (= (first args) (second args)) 1 0))))
 
 (defn part2 []
-  (eval-packet (first (decode-packet (parse-input input)))))
+  (->> (parse-input input)
+       decode-packet
+       first
+       eval-packet))
 
 (comment
   (println "part 1: " (part1))
