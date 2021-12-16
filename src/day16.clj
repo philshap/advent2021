@@ -1,6 +1,5 @@
 (ns day16
-  (:require [clojure.string :as str]
-            [clojure.edn :as edn]))
+  (:require [clojure.edn :as edn]))
 
 (def input (slurp "src/day16-input.txt"))
 
@@ -12,7 +11,7 @@
   (clojure.pprint/cl-format nil "~4,'0b" (edn/read-string (str "0x" hex))))
 
 (defn -expand-bits [data]
-  (into [] (mapcat -hex->bin (str/trim data))))
+  (into [] (mapcat -hex->bin data)))
 
 (defn -decode-bits [bits]
   (edn/read-string (str "2r" (apply str bits))))
@@ -35,18 +34,21 @@
 ;; packet decoding
 (defn read-literal []
   (loop [value 0]
-    (let [flag (read-bits 1), data (read-bits 4)]
+    (let [flag (read-bits 1)
+          data (read-bits 4)
+          new-value (+ (* value 16) data)]
       (case flag
-        0 (+ (* value 16) data)
-        1 (recur (+ (* value 16) data))))))
+        0 new-value
+        1 (recur new-value)))))
 
 (declare decode-packet)
 
 (defn decode-subs []
   (case (read-bits 1)
-    0 (let [length (read-bits 15), start-pos (read-pos)]
+    0 (let [length (read-bits 15)
+            end-pos (+ (read-pos) length)]
         (loop [subs []]
-          (if (= (read-pos) (+ start-pos length))
+          (if (= (read-pos) end-pos)
             subs
             (recur (conj subs (decode-packet))))))
     1 (loop [length (read-bits 11)
@@ -56,8 +58,7 @@
           (recur (dec length) (conj subs (decode-packet)))))))
 
 (defn decode-packet []
-  (let [version (read-bits 3)
-        tag (read-bits 3)]
+  (let [version (read-bits 3), tag (read-bits 3)]
     (case tag
       4 {:version version, :tag tag, :value (read-literal)}
       {:version version :tag tag :subs (decode-subs)})))
