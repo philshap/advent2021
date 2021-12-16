@@ -64,9 +64,7 @@
 
 (defn version-total [packet]
   (+ (:version packet)
-     (if (= 4 (:tag packet))
-       0
-       (reduce + (map version-total (:subs packet))))))
+     (reduce + (map version-total (:subs packet)))))
 
 (defn part1 []
   (init-bits input)
