@@ -3,73 +3,66 @@
 
 (def input (slurp "src/day16-input.txt"))
 
-;; stateful BITS api
-(def bits-data (ref []))
-(def bits-pos (ref 0))
+;; BITS api
 
 (defn hex->bin [hex]
   (clojure.pprint/cl-format nil "~4,'0b" (edn/read-string (str "0x" hex))))
 
-(defn expand-bits [data]
-  (into [] (mapcat hex->bin data)))
+(defn parse-input [data]
+  (reduce str (mapcat hex->bin data)))
 
-(defn decode-bits [bits]
-  (edn/read-string (str "2r" (apply str bits))))
-
-(defn init-bits! [data]
-  (dosync
-    (ref-set bits-data (expand-bits data))
-    (ref-set bits-pos 0)))
-
-(defn read-bits! [n]
-  (let [pos @bits-pos
-        end (+ pos n)
-        decoded (decode-bits (subvec @bits-data pos end))]
-    (dosync (ref-set bits-pos end))
-    decoded))
-
-(defn read-pos []
-  (deref bits-pos))
+;; read `length` bits as an int, return the remaining bits
+(defn read-bits [bits length]
+  [(edn/read-string (str "2r" (subs bits 0 length)))
+   (subs bits length)])
 
 ;; packet decoding
-(defn decode-literal []
-  (loop [value 0]
-    (let [flag (read-bits! 1)
-          data (read-bits! 4)
-          new-value (+ (* value 16) data)]
+(defn decode-literal [bits]
+  (loop [[value bits] [0 bits]]
+    (let [[flag bits] (read-bits bits 1)
+          [data bits] (read-bits bits 4)
+          new-value [(+ (* value 16) data) bits]]
       (case flag
         0 new-value
         1 (recur new-value)))))
 
 (declare decode-packet)
 
-(defn decode-subs []
-  (case (read-bits! 1)
-    0 (let [length (read-bits! 15)
-            end-pos (+ (read-pos) length)]
-        (loop [subs []]
-          (if (= (read-pos) end-pos)
-            subs
-            (recur (conj subs (decode-packet))))))
-    1 (loop [length (read-bits! 11)
-             subs []]
-        (if (zero? length)
-          subs
-          (recur (dec length) (conj subs (decode-packet)))))))
+(defn decode-subs [bits]
+  (let [[type bits] (read-bits bits 1)]
+    (case type
+     0 (let [[length bits] (read-bits bits 15)
+             end-pos (- (count bits) length)]
+         (loop [subs []
+                bits bits]
+           (if (= (count bits) end-pos)
+             [subs bits]
+             (let [[sub bits] (decode-packet bits)]
+               (recur (conj subs sub) bits)))))
+     1 (let [[length bits] (read-bits bits 11)]
+         (loop [length length
+                bits bits
+                subs []]
+          (if (zero? length)
+            [subs bits]
+            (let [[sub offset] (decode-packet bits)]
+              (recur (dec length) offset (conj subs sub)))))))))
 
-(defn decode-packet []
-  (let [version (read-bits! 3), tag (read-bits! 3)]
+(defn decode-packet [bits]
+  (let [[version bits] (read-bits bits 3)
+        [tag bits] (read-bits bits 3)]
     (case tag
-      4 {:version version, :tag tag, :value (decode-literal)}
-      {:version version :tag tag :subs (decode-subs)})))
+      4 (let [[literal bits] (decode-literal bits)]
+          [{:version version, :tag tag, :value literal} bits])
+      (let [[subs bits] (decode-subs bits)]
+        [{:version version :tag tag :subs subs} bits]))))
 
 (defn version-total [packet]
   (+ (:version packet)
      (reduce + (map version-total (:subs packet)))))
 
 (defn part1 []
-  (init-bits! input)
-  (version-total (decode-packet)))
+  (version-total (first (decode-packet (parse-input input)))))
 
 (defn eval-packet [packet]
   (let [args (map eval-packet (:subs packet))]
@@ -84,8 +77,7 @@
       7 (if (= (first args) (second args)) 1 0))))
 
 (defn part2 []
-  (init-bits! input)
-  (eval-packet (decode-packet)))
+  (eval-packet (first (decode-packet (parse-input input)))))
 
 (comment
   (println "part 1: " (part1))
