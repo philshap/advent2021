@@ -41,13 +41,13 @@
              (let [[sub bits] (decode-packet bits)]
                (recur (conj subs sub) bits)))))
      1 (let [[length bits] (read-bits bits 11)]
-         (loop [length length
+         (loop [subs []
                 bits bits
-                subs []]
+                length length]
           (if (zero? length)
             [subs bits]
-            (let [[sub offset] (decode-packet bits)]
-              (recur (dec length) offset (conj subs sub)))))))))
+            (let [[sub bits] (decode-packet bits)]
+              (recur (conj subs sub) bits (dec length)))))))))
 
 (defn decode-packet [bits]
   (let [[version bits] (read-bits bits 3)
